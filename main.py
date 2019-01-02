@@ -15,6 +15,12 @@ bg_size = width, height = 480, 700
 screen = pygame.display.set_mode(bg_size)
 pygame.display.set_caption("飞机大战 -- Cat-fishing")
 background = pygame.image.load("images/background.png").convert()
+
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+
 # 载入游戏音乐
 pygame.mixer.music.load("sound/game_music.ogg")
 pygame.mixer.music.set_volume(0.2)
@@ -64,10 +70,13 @@ def add_big_enemies(group1, group2, num):
 
 
 def main():
-    pygame.mixer.music.play()
+    pygame.mixer.music.play(-1)
     clock = pygame.time.Clock()
     running = True
     me = MyPlane(bg_size)
+    # 得分
+    score = 0
+    score_font = pygame.font.Font("font/font.TTF", 36)
     enemies = pygame.sprite.Group()
     # 生成地方小飞机
     small_enemies = pygame.sprite.Group()
@@ -109,12 +118,7 @@ def main():
             me.moveRight()
 
         screen.blit(background, (0, 0))
-        # 切换图片
-        if not(delay % 5):
-            switch_image = not switch_image
-        delay -= 1
-        if not delay:
-            delay = 100
+
         if me.active:
             # 绘制我方飞机
             if switch_image:
@@ -134,8 +138,10 @@ def main():
 
         for i in range(BULLET1_NUM):
             bullet1.append(bullet.Bullet1(me.rect.midtop))
+
         # 每10帧发射一枚子弹
         if not(delay % 10):
+            bullet_sound.play()
             bullet1[bullet1_index].reset(me.rect.midtop)
             bullet1_index = (bullet1_index + 1) % BULLET1_NUM
 
@@ -151,18 +157,40 @@ def main():
                         if e in mid_enemies or e in big_enemies:
                             e.energy -= 1
                             if e.energy == 0:
+                                if e in mid_enemies:
+                                    score += 6000
+                                elif e in big_enemies:
+                                    score += 10000
                                 e.active = False
                         else:
+                            score += 1000
                             e.active = False
 
         # 绘制大型敌机
         for each in big_enemies:
             if each.active:
                 each.move()
-                if switch_image:
-                    screen.blit(each.image1, each.rect)
+                if each.hit:
+                    screen.blit(each.image_hit, each.rect)
+                    each.hit = False
                 else:
-                    screen.blit(each.image2, each.rect)
+                    if switch_image:
+                        screen.blit(each.image1, each.rect)
+                    else:
+                        screen.blit(each.image2, each.rect)
+                # 绘制血槽
+                pygame.draw.line(screen, BLACK, (each.rect.left, each.rect.top - 5),
+                                 (each.rect.right, each.rect.top - 5), 2)
+                # 当生命大于20%显示绿色，否则显示红色
+                energy_remain = each.energy / enemy.BigEnemy.energy
+                if energy_remain > 0.2:
+                    energy_color = GREEN
+                else:
+                    energy_color = RED
+
+                pygame.draw.line(screen, energy_color, (each.rect.left, each.rect.top - 5),
+                                 (each.rect.left + each.rect.width * energy_remain, each.rect.top - 5), 2)
+
                 # 播放音效
                 if each.rect.bottom > -50:
                     enemy3_fly_sound.play()
@@ -179,7 +207,22 @@ def main():
         for each in mid_enemies:
             if each.active:
                 each.move()
-                screen.blit(each.image, each.rect)
+                if each.hit:
+                    screen.blit(each.image_hit, each.rect)
+                else:
+                    screen.blit(each.image, each.rect)
+                # 绘制血槽
+                pygame.draw.line(screen, BLACK, (each.rect.left, each.rect.top - 5),
+                                 (each.rect.right, each.rect.top - 5), 2)
+                # 当生命大于20%显示绿色，否则显示红色
+                energy_remain = each.energy / enemy.MidEnemy.energy
+                if energy_remain > 0.2:
+                    energy_color = GREEN
+                else:
+                    energy_color = RED
+
+                pygame.draw.line(screen, energy_color, (each.rect.left, each.rect.top - 5),
+                                 (each.rect.left + each.rect.width * energy_remain, each.rect.top - 5), 2)
             else:
                 if not (delay % 3):
                     if e2_destroy_index == 0:
@@ -187,8 +230,8 @@ def main():
                     screen.blit(each.destroy_images[e2_destroy_index], each.rect)
                     e2_destroy_index = (e2_destroy_index + 1) % 4
                     if e2_destroy_index == 0:
-                        enemy2_down_sound.stop()
                         each.reset()
+
         # 绘制小型敌机
         for each in small_enemies:
             if each.active:
@@ -201,7 +244,6 @@ def main():
                     screen.blit(each.destroy_images[e1_destroy_index], each.rect)
                     e1_destroy_index = (e1_destroy_index + 1) % 4
                     if e1_destroy_index == 0:
-                        enemy1_down_sound.stop()
                         each.reset()
 
         # 检测敌我飞机是否相撞
@@ -211,6 +253,16 @@ def main():
             for e in enemies_down:
                 e.active = False
 
+        # 绘制得分
+        score_text = score_font.render("Score: %s" % str(score), True, WHITE)
+        screen.blit(score_text, (10, 5))
+
+        # 切换图片
+        if not (delay % 5):
+            switch_image = not switch_image
+        delay -= 1
+        if not delay:
+            delay = 100
         pygame.display.flip()
         clock.tick(60)
 
