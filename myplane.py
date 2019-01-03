@@ -4,8 +4,18 @@ import pygame
 class MyPlane(pygame.sprite.Sprite):
     def __init__(self, bg_size):
         pygame.sprite.Sprite.__init__(self)
+        # 飞机正常飞行
+        self.active = True
         self.image1 = pygame.image.load("images/me1.png").convert_alpha()
         self.image2 = pygame.image.load("images/me2.png").convert_alpha()
+        # 获得Surface对象的非透明部分,该属性用于准确碰撞检测用
+        self.mask = pygame.mask.from_surface(self.image1)
+        # 我方飞机爆炸图集
+        self.destroy_images = []
+        self.destroy_images.extend([pygame.image.load("images/me_destroy_1.png").convert_alpha(),
+                                    pygame.image.load("images/me_destroy_2.png").convert_alpha(),
+                                    pygame.image.load("images/me_destroy_3.png").convert_alpha(),
+                                    pygame.image.load("images/me_destroy_4.png").convert_alpha()])
         self.rect = self.image1.get_rect()
         self.width, self.height = bg_size[0], bg_size[1]
         # 初始化位置在下方的中间位置
