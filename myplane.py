@@ -22,6 +22,7 @@ class MyPlane(pygame.sprite.Sprite):
         # 下方预留60像素左右的位置作为“状态栏”
         self.rect.left, self.rect.top = (self.width - self.rect.width) // 2, self.height - self.rect.height - 60
         self.speed = 10
+        self.invincible = False
 
     def moveUp(self):
         if self.rect.top > 0:
@@ -46,3 +47,9 @@ class MyPlane(pygame.sprite.Sprite):
             self.rect.left += self.speed
         else:
             self.rect.right = self.width
+
+    def reset(self):
+        self.rect.left, self.rect.top = (self.width - self.rect.width) // 2, self.height - self.rect.height - 60
+        self.active = True
+        # 飞机复活3秒真男人
+        self.invincible = True
