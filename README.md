@@ -1,7 +1,7 @@
 # war_fight
-plane fighting
+    plane fighting
 
-I am not perfect, you should waited
+    I am not perfect, you should waited
 
 ## summary
     面向对象思想的典型应用，飞机、子弹、补给的属性和行为封装到各自类中。在属性的赋值方面值得现在去仔细品味，
